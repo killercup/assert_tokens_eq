@@ -7,6 +7,31 @@ and shows a pretty diff
 
 [pretty_assertions]: https://crates.io/crates/pretty_assertions
 
+## How it works
+
+You write:
+
+```rust
+let got = something_that_generates_rust_code();
+let expected = quote! {
+    #[no_mangle]
+    extern "C" fn foo(
+        input: *const ::libc::c_char,
+        input_len: ::libc::size_t,
+        input3: *const ::libc::c_int,
+        input3_len: ::libc::size_t,
+    ) {
+        fn foo(input: Arc<str>, input2: Arc<str>) {}
+        unimplemented!()
+    }
+};
+assert_tokens_eq!(got, expected);
+```
+
+and you get:
+
+![](./screenshot.png)
+
 ## License
 
 Licensed under either of
