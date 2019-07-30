@@ -10,3 +10,8 @@ documentation = "http://docs.rs/assert_tokens_eq"
 readme = "README.md"
 
 [dependencies]
+pretty_assertions = "0.6.1"
+snafu = "0.4.3"
+
+[dev-dependencies]
+quote = "0.6.13"
