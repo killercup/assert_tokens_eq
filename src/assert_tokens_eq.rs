@@ -70,7 +70,7 @@ fn test_cursed_code() {
     assert_tokens_eq!(got, expected);
 }
 
-/// run this with `cargo test --lib -- test_le_diff --nocapture`
+/// run this with `cargo test --lib -- assert_tokens_eq::test_le_diff --nocapture`
 #[test]
 #[should_panic]
 fn test_le_diff() {

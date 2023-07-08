@@ -1,5 +1,3 @@
-#![doc = include_str!("../README.md")]
-
 mod assert_tokens_eq;
 mod assert_tokens_eq_v;
 mod formatting;

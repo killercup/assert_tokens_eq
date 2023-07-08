@@ -32,9 +32,11 @@ assert_tokens_eq!(got, expected);
 
 and you get:
 
-![Screenshot](./screenshot.png)
+![Screenshot of `assert_token_eq!` output](./screenshot.png)
 
 Note that this crate also provides a [`assert_tokens_eq_v`] macro that additionally prints the full token stream when the assertion fails.
+
+![Screenshot of `assert_token_eq_v!` output](./screenshot2.png)
 
 ## License
 
