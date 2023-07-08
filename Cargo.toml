@@ -11,13 +11,13 @@ documentation = "http://docs.rs/assert_tokens_eq"
 readme = "README.md"
 
 [dependencies]
-snafu = "0.4.3"
+snafu = "0.7.4"
 ansi_term = "0.12.0"
 difference = "2.0.0"
 
 [target.'cfg(windows)'.dependencies]
 output_vt100 = "0.1.2"
-ctor = "0.1.9"
+ctor = "0.2"
 
 [dev-dependencies]
-quote = "0.6.13"
+quote = "1.0.29"

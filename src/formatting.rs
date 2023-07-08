@@ -5,10 +5,14 @@ use ansi_term::{
 use difference::{Changeset, Difference};
 use std::fmt::{self, Display};
 
-pub struct Comparison(Changeset);
+pub(crate) struct Comparison(Changeset);
+pub(crate) struct FullTokenStrs<'a> {
+    left: &'a str,
+    right: &'a str,
+}
 
 impl Comparison {
-    pub fn new(left: &str, right: &str) -> Comparison {
+    pub(crate) fn new(left: &str, right: &str) -> Comparison {
         Comparison(Changeset::new(left, right, "\n"))
     }
 }
@@ -16,6 +20,23 @@ impl Comparison {
 impl Display for Comparison {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         format_changeset(f, &self.0)
+    }
+}
+
+impl<'a> FullTokenStrs<'a> {
+    pub(crate) fn new(left: &'a str, right: &'a str) -> FullTokenStrs<'a> {
+        FullTokenStrs { left, right }
+    }
+}
+
+impl<'a> Display for FullTokenStrs<'a> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}\n\n", Style::new().bold().paint("Full:"))?;
+        writeln!(f, "{}", Red.paint("left:"))?;
+        write!(f, "{}{}\n\n", self.left, Red.paint("/*end*/"))?;
+
+        writeln!(f, "{}", Green.paint("right:"))?;
+        writeln!(f, "{}{}", self.right, Green.paint("/*end*/"))
     }
 }
 
@@ -36,7 +57,7 @@ const SIGN_LEFT: char = '<'; // - < ←
 // https://github.com/johannhof/difference.rs/blob/c5749ad7d82aa3d480c15cb61af9f6baa08f116f/examples/github-style.rs
 // Credits johannhof (MIT License)
 
-pub fn format_changeset(f: &mut fmt::Formatter, changeset: &Changeset) -> fmt::Result {
+fn format_changeset(f: &mut fmt::Formatter, changeset: &Changeset) -> fmt::Result {
     let diffs = &changeset.diffs;
 
     writeln!(
@@ -58,7 +79,7 @@ pub fn format_changeset(f: &mut fmt::Formatter, changeset: &Changeset) -> fmt::R
             Difference::Add(ref added) => {
                 let prev = i.checked_sub(1).and_then(|x| diffs.get(x));
                 match prev {
-                    Some(&Difference::Rem(ref removed)) => {
+                    Some(Difference::Rem(removed)) => {
                         // The addition is preceded by an removal.
                         //
                         // Let's highlight the character-differences in this replaced
@@ -113,7 +134,7 @@ macro_rules! join {
     )
 }
 
-pub fn format_replacement(f: &mut dyn fmt::Write, added: &str, removed: &str) -> fmt::Result {
+fn format_replacement(f: &mut dyn fmt::Write, added: &str, removed: &str) -> fmt::Result {
     let Changeset { diffs, .. } = Changeset::new(removed, added, "");
 
     // LEFT side (==what's been)
