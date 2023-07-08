@@ -1,5 +1,11 @@
 # assert_tokens_eq
 
+[![Latest Version](https://img.shields.io/crates/v/assert_tokens_eq.svg)][`assert_tokens_eq`]
+[![Downloads](https://img.shields.io/crates/d/assert_tokens_eq.svg)][`assert_tokens_eq`]
+[![Documentation](https://docs.rs/assert_tokens_eq/badge.svg)][`assert_tokens_eq`/docs]
+[![License](https://img.shields.io/crates/l/assert_tokens_eq.svg)][`assert_tokens_eq`/license]
+[![Dependency Status](https://deps.rs/repo/github/JohnScience/assert_tokens_eq/status.svg)][`assert_tokens_eq`/dep_status]
+
 Like Rust's built-in [`assert_eq`] macro, but for token streams.
 Passes them through [`rustfmt`], and shows a pretty diff (powered by [`pretty_assertions`]).
 
@@ -50,3 +56,7 @@ conditions.
 [`pretty_assertions`]: https://crates.io/crates/pretty_assertions
 [`rustfmt`]: https://github.com/rust-lang/rustfmt#rustfmt----
 [`assert_tokens_eq_v`]: https://docs.rs/assert_tokens_eq/latest/assert_tokens_eq/macro.assert_tokens_eq_v.html
+[`assert_tokens_eq`]: https://crates.io/crates/assert_tokens_eq
+[`assert_tokens_eq`/docs]: https://docs.rs/assert_tokens_eq
+[`assert_tokens_eq`/license]: https://github.com/JohnScience/assert_tokens_eq#license
+[`assert_tokens_eq`/dep_status]: https://deps.rs/repo/github/JohnScience/assert_tokens_eq
