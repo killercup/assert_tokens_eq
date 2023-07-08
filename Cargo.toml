@@ -1,7 +1,10 @@
 [package]
 name = "assert_tokens_eq"
-version = "0.1.0"
-authors = ["Pascal Hertleif <pascal@technocreatives.com>"]
+version = "0.1.1"
+authors = [
+    "Pascal Hertleif <pascal@technocreatives.com>",
+    "Dmitrii Demenev <demenev.dmitriy1@gmail.com>",
+]
 description = "Like Rust's built-in `assert_eq` macro, but for token streams. Passes them through rustfmt, and shows a pretty diff."
 edition = "2018"
 license = "MIT OR Apache-2.0"

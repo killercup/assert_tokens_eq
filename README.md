@@ -1,7 +1,7 @@
 # assert_tokens_eq
 
 Like Rust's built-in [`assert_eq`] macro, but for token streams.
-Passes them through rustfmt, and shows a pretty diff (powered by [`pretty_assertions`]).
+Passes them through [`rustfmt`], and shows a pretty diff (powered by [`pretty_assertions`]).
 
 ## How it works
 
@@ -28,6 +28,8 @@ and you get:
 
 ![Screenshot](./screenshot.png)
 
+Note that this crate also provides a [`assert_tokens_eq_v`] macro that additionally prints the full token stream when the assertion fails.
+
 ## License
 
 Licensed under either of
@@ -46,3 +48,5 @@ conditions.
 
 [`assert_eq`]: https://doc.rust-lang.org/std/macro.assert_eq.html
 [`pretty_assertions`]: https://crates.io/crates/pretty_assertions
+[`rustfmt`]: https://github.com/rust-lang/rustfmt#rustfmt----
+[`assert_tokens_eq_v`]: https://docs.rs/assert_tokens_eq/latest/assert_tokens_eq/macro.assert_tokens_eq_v.html
