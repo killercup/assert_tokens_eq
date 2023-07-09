@@ -7,8 +7,8 @@ use std::fmt::{self, Display};
 
 pub(crate) struct Comparison(Changeset);
 pub(crate) struct FullTokenStrs<'a> {
-    left: &'a str,
-    right: &'a str,
+    left: Option<&'a str>,
+    right: Option<&'a str>,
 }
 
 impl Comparison {
@@ -24,19 +24,28 @@ impl Display for Comparison {
 }
 
 impl<'a> FullTokenStrs<'a> {
-    pub(crate) fn new(left: &'a str, right: &'a str) -> FullTokenStrs<'a> {
-        FullTokenStrs { left, right }
+    pub(crate) fn new(left: Option<&'a str>, right: Option<&'a str>) -> Option<FullTokenStrs<'a>> {
+        if left.is_none() && right.is_none() {
+            return None;
+        }
+        Some(FullTokenStrs { left, right })
     }
 }
 
 impl<'a> Display for FullTokenStrs<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}\n\n", Style::new().bold().paint("Full:"))?;
-        writeln!(f, "{}", Red.paint("left:"))?;
-        write!(f, "{}{}\n\n", self.left, Red.paint("/*end*/"))?;
+        
+        if let Some(left) = self.left {
+            writeln!(f, "{}", Red.paint("left:"))?;
+            write!(f, "{}{}\n\n", left, Red.paint("/*end*/"))?;
+        }
 
-        writeln!(f, "{}", Green.paint("right:"))?;
-        writeln!(f, "{}{}", self.right, Green.paint("/*end*/"))
+        if let Some(right) = self.right {
+            writeln!(f, "{}", Green.paint("right:"))?;
+            writeln!(f, "{}{}", right, Green.paint("/*end*/"))?;
+        }
+        Ok(())
     }
 }
 
