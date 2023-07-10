@@ -85,12 +85,50 @@ macro_rules! assert_tokens_eq_v {
             (left_val, right_val) => {
                 let left = quote! { fn __wrapper() { #left_val } };
                 let right = quote! { fn __wrapper() { #right_val } };
-                let opts = $crate::Opts::Opts {
-                    ..$crate::Opts::default(),
-                    show_full_left: true,
-                    show_full_right: true,
+                let mut opts = $crate::Opts::default();
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`"))
+            }
+        }
+    });
+    ($left:expr , $right:expr, opts: $opts:expr) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #left_val } }
+                } else {
+                    quote! { #left_val }
                 };
-                $crate::assert_tokens_eq(left, right, format_args!("`(left == right)`"))
+                let right = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #right_val } }
+                } else {
+                    quote! { #right_val }
+                };
+                let mut opts = $opts;
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`"))
+            }
+        }
+    });
+    ($left:expr , $right:expr, opts: $opts:expr, $($arg:tt)*) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #left_val } }
+                } else {
+                    quote! { #left_val }
+                };
+                let right = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #right_val } }
+                } else {
+                    quote! { #right_val }
+                };
+                let mut opts = $opts;
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`: {}", $($arg)*))
             }
         }
     });
@@ -99,12 +137,10 @@ macro_rules! assert_tokens_eq_v {
             (left_val, right_val) => {
                 let left = quote! { fn __wrapper() { #left_val } };
                 let right = quote! { fn __wrapper() { #right_val } };
-                let opts = $crate::Opts::Opts {
-                    ..$crate::Opts::default(),
-                    show_full_left: true,
-                    show_full_right: true,
-                };
-                $crate::assert_tokens_eq(left, right, format_args!("`(left == right)`: {}", $($arg)*))
+                let mut opts = $crate::Opts::default();
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`: {}", $($arg)*))
             }
         }
     });

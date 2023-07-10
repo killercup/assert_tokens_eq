@@ -35,7 +35,7 @@ impl<'a> FullTokenStrs<'a> {
 impl<'a> Display for FullTokenStrs<'a> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}\n\n", Style::new().bold().paint("Full:"))?;
-        
+
         if let Some(left) = self.left {
             writeln!(f, "{}", Red.paint("left:"))?;
             write!(f, "{}{}\n\n", left, Red.paint("/*end*/"))?;
