@@ -181,7 +181,7 @@ impl Default for Opts {
 impl Opts {
     /// A set of options that can be used to compare tokens precisely
     /// (i.e. without wrapping in a function and without consequent application of `rustfmt`)
-    /// and show the full left and right sides of the comparison.
+    /// and in addition to the diff-view also show the full left and right sides of the comparison.
     ///
     /// ## Notes
     ///
