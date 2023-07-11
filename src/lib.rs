@@ -1,9 +1,18 @@
-use snafu::{OptionExt, ResultExt, Snafu};
-use std::{
-    fmt::{self, Display},
-    io::{Error as IoError, Write},
-    process::{Command, Stdio},
-};
+use core::fmt::Write;
+
+mod formatting;
+mod rustfmt;
+
+// This code is needed to enable ANSI escape codes in Windows consoles.
+// Source: https://github.com/colin-kiegel/rust-pretty-assertions/blob/2f4058ac7fb5e24a923aef80851c6608b6683d0f/src/lib.rs#L84-L90
+#[cfg(windows)]
+#[ctor::ctor]
+fn init() {
+    let _ = output_vt100::try_init();
+}
+
+use self::rustfmt::rustfmt;
+use std::fmt::{self, Display};
 
 #[macro_export]
 macro_rules! assert_tokens_eq {
@@ -15,7 +24,42 @@ macro_rules! assert_tokens_eq {
             (left_val, right_val) => {
                 let left = quote! { fn __wrapper() { #left_val } };
                 let right = quote! { fn __wrapper() { #right_val } };
-                $crate::assert_tokens_eq(left, right, format_args!("`(left == right)`"))
+                let opts = $crate::Opts::default();
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`"))
+            }
+        }
+    });
+    ($left:expr , $right:expr, opts: $opts:expr) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #left_val } }
+                } else {
+                    quote! { #left_val }
+                };
+                let right = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #right_val } }
+                } else {
+                    quote! { #right_val }
+                };
+                $crate::assert_tokens_eq(left, right, $opts, format_args!("`(left == right)`"))
+            }
+        }
+    });
+    ($left:expr , $right:expr, opts: $opts:expr, $($arg:tt)*) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #left_val } }
+                } else {
+                    quote! { #left_val }
+                };
+                let right = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #right_val } }
+                } else {
+                    quote! { #right_val }
+                };
+                $crate::assert_tokens_eq(left, right, $opts, format_args!("`(left == right)`: {}", $($arg)*))
             }
         }
     });
@@ -24,73 +68,170 @@ macro_rules! assert_tokens_eq {
             (left_val, right_val) => {
                 let left = quote! { fn __wrapper() { #left_val } };
                 let right = quote! { fn __wrapper() { #right_val } };
-                $crate::assert_tokens_eq(left, right, format_args!("`(left == right)`: {}", $($arg)*))
+                let opts = Opts::default();
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`: {}", $($arg)*))
             }
         }
     });
 }
 
-mod diff;
-
-// I have no idea what dark magic this is, I only copied it from
-// https://github.com/colin-kiegel/rust-pretty-assertions/blob/2f4058ac7fb5e24a923aef80851c6608b6683d0f/src/lib.rs#L84-L90
-#[cfg(windows)]
-#[ctor::ctor]
-fn init() {
-    let _ = output_vt100::try_init();
+#[macro_export]
+macro_rules! assert_tokens_eq_v {
+    ($left:expr , $right:expr,) => ({
+        assert_tokens_eq_v!($left, $right)
+    });
+    ($left:expr , $right:expr) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = quote! { fn __wrapper() { #left_val } };
+                let right = quote! { fn __wrapper() { #right_val } };
+                let mut opts = $crate::Opts::default();
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`"))
+            }
+        }
+    });
+    ($left:expr , $right:expr, opts: $opts:expr) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #left_val } }
+                } else {
+                    quote! { #left_val }
+                };
+                let right = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #right_val } }
+                } else {
+                    quote! { #right_val }
+                };
+                let mut opts = $opts;
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`"))
+            }
+        }
+    });
+    ($left:expr , $right:expr, opts: $opts:expr, $($arg:tt)*) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #left_val } }
+                } else {
+                    quote! { #left_val }
+                };
+                let right = if $opts.wrap_in_fn {
+                    quote! { fn __wrapper() { #right_val } }
+                } else {
+                    quote! { #right_val }
+                };
+                let mut opts = $opts;
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`: {}", $($arg)*))
+            }
+        }
+    });
+    ($left:expr , $right:expr, $($arg:tt)*) => ({
+        match (&($left), &($right)) {
+            (left_val, right_val) => {
+                let left = quote! { fn __wrapper() { #left_val } };
+                let right = quote! { fn __wrapper() { #right_val } };
+                let mut opts = $crate::Opts::default();
+                opts.show_full_left = true;
+                opts.show_full_right = true;
+                $crate::assert_tokens_eq(left, right, opts, format_args!("`(left == right)`: {}", $($arg)*))
+            }
+        }
+    });
 }
 
-pub fn assert_tokens_eq(left_raw: impl Display, right_raw: impl Display, details: fmt::Arguments) {
-    let left = rustfmt(left_raw).unwrap();
-    let left = left.trim_start_matches("fn __wrapper() {\n");
-    let left = left.trim_end_matches("\n}\n");
+/// Options that can be supplied to `assert_tokens_eq` macro.
+#[non_exhaustive]
+pub struct Opts {
+    /// Whether to wrap the input in a function before the formatting and comparison.
+    ///
+    /// This is a legacy option that exists to support the old implementation of [`assert_tokens_eq`]
+    /// macro.
+    pub wrap_in_fn: bool,
+    /// Whether to apply rustfmt to the input before the comparison.
+    ///
+    /// While it can make equivalent but not identical code pass the test,
+    /// it can't deal with code that is not syntactically valid on its own, e.g.
+    /// `0usize, 0usize, 0usize, 255usize,` or even `let s = "A string"` because
+    /// the latter would be the case of "global let".
+    pub apply_rustfmt: bool,
+    /// Whether to show the full left side of the comparison.
+    pub show_full_left: bool,
+    /// Whether to show the full right side of the comparison.
+    pub show_full_right: bool,
+}
 
-    let right = rustfmt(right_raw).unwrap();
-    let right = right.trim_start_matches("fn __wrapper() {\n");
-    let right = right.trim_end_matches("\n}\n");
+impl Default for Opts {
+    fn default() -> Self {
+        Self {
+            wrap_in_fn: true,
+            apply_rustfmt: true,
+            show_full_left: false,
+            show_full_right: false,
+        }
+    }
+}
+
+impl Opts {
+    /// A set of options that can be used to compare tokens precisely
+    /// (i.e. without wrapping in a function and without consequent application of `rustfmt`)
+    /// and in addition to the diff-view also show the full left and right sides of the comparison.
+    ///
+    /// ## Notes
+    ///
+    /// `VVV` in the identifier alludes to ["very very verbose"].
+    ///
+    /// ["very very verbose"]: https://stackoverflow.com/questions/24402473/what-is-meaning-of-vvv-option-in-curl-request
+    pub const VVV_PRECISE_CMP: Self = Self {
+        wrap_in_fn: false,
+        apply_rustfmt: false,
+        show_full_left: false,
+        show_full_right: false,
+    };
+}
+
+pub fn assert_tokens_eq(
+    left_raw: impl Display,
+    right_raw: impl Display,
+    opts: Opts,
+    details: fmt::Arguments,
+) {
+    let left = if opts.apply_rustfmt { rustfmt(left_raw).unwrap() } else { left_raw.to_string() };
+
+    let left = if opts.wrap_in_fn {
+        left.trim_start_matches("fn __wrapper() {\n").trim_end_matches("\n}\n")
+    } else {
+        left.as_str()
+    };
+
+    let right =
+        if opts.apply_rustfmt { rustfmt(right_raw).unwrap() } else { right_raw.to_string() };
+
+    let right = if opts.wrap_in_fn {
+        right.trim_start_matches("fn __wrapper() {\n").trim_end_matches("\n}\n")
+    } else {
+        right.as_str()
+    };
 
     if *left != *right {
-        panic!(
-            "assertion failed: {}\
-             \n\
-             \n{}\
-             \n",
-            details,
-            diff::Comparison::new(left, right)
-        );
+        let mut s = String::new();
+        write!(s, "assertion failed: {}\n\n", details).unwrap();
+        write!(s, "{}", formatting::Comparison::new(left, right)).unwrap();
+
+        let left = if opts.show_full_left { Some(left) } else { None };
+        let right = if opts.show_full_right { Some(right) } else { None };
+        if let Some(full) = formatting::FullTokenStrs::new(left, right) {
+            write!(s, "{full}").unwrap();
+        }
+
+        panic!("{}", s);
     }
-}
-
-fn rustfmt(input: impl Display) -> Result<String, Error> {
-    let mut fmt = Command::new("rustfmt")
-        .arg("--")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()
-        .context(Rustfmt { msg: "failed to spawn external process" })?;
-
-    {
-        let stdin = fmt.stdin.as_mut().context(RustfmtStdin { msg: "no stdin" })?;
-
-        stdin
-            .write_all(input.to_string().as_bytes())
-            .context(Rustfmt { msg: "failed to write source to external process" })?;
-    }
-
-    let output =
-        fmt.wait_with_output().context(Rustfmt { msg: "failed to read process output" })?;
-
-    Ok(String::from_utf8(output.stdout).context(RustfmtReading)?)
-}
-
-#[derive(Debug, Snafu)]
-enum Error {
-    #[snafu(display("Error running rustfmt: {}: {}", msg, source))]
-    Rustfmt { msg: String, source: IoError },
-    #[snafu(display("Error running rustfmt: {}", msg))]
-    RustfmtStdin { msg: String },
-    #[snafu(display("Error reading rustfmt output: {}", source))]
-    RustfmtReading { source: std::string::FromUtf8Error },
 }
 
 #[test]
@@ -115,7 +256,8 @@ fn test_cursed_code() {
     assert_tokens_eq!(got, expected);
 }
 
-/// run this with `cargo test --lib -- test_le_diff --nocapture`
+/// run this with
+/// `cargo test --lib -- test_le_diff --nocapture`
 #[test]
 #[should_panic]
 fn test_le_diff() {
