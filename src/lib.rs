@@ -185,7 +185,9 @@ impl Opts {
     ///
     /// ## Notes
     ///
-    /// `VVV` in the identifier alludes to very verbose.
+    /// `VVV` in the identifier alludes to ["very very verbose"].
+    ///
+    /// ["very very verbose"]: https://stackoverflow.com/questions/24402473/what-is-meaning-of-vvv-option-in-curl-request
     pub const VVV_PRECISE_CMP: Self = Self {
         wrap_in_fn: false,
         apply_rustfmt: false,
