@@ -178,6 +178,22 @@ impl Default for Opts {
     }
 }
 
+impl Opts {
+    /// A set of options that can be used to compare tokens precisely
+    /// (i.e. without wrapping in a function and without consequent application of `rustfmt`)
+    /// and show the full left and right sides of the comparison.
+    ///
+    /// ## Notes
+    ///
+    /// `VVV` in the identifier alludes to very verbose.
+    pub const VVV_PRECISE_CMP: Self = Self {
+        wrap_in_fn: false,
+        apply_rustfmt: false,
+        show_full_left: false,
+        show_full_right: false,
+    };
+}
+
 pub fn assert_tokens_eq(
     left_raw: impl Display,
     right_raw: impl Display,
