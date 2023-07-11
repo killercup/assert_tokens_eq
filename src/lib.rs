@@ -158,7 +158,8 @@ pub struct Opts {
     ///
     /// While it can make equivalent but not identical code pass the test,
     /// it can't deal with code that is not syntactically valid on its own, e.g.
-    /// `0usize, 0usize, 0usize, 255usize,`.
+    /// `0usize, 0usize, 0usize, 255usize,` or even `let s = "A string"` because
+    /// the latter would be the case of "global let".
     pub apply_rustfmt: bool,
     /// Whether to show the full left side of the comparison.
     pub show_full_left: bool,
